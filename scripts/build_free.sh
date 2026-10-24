@@ -15,7 +15,7 @@ xcodebuild -project alt-tab-macos.xcodeproj -scheme Release -configuration Relea
     CODE_SIGN_STYLE=Manual CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO \
     OTHER_CODE_SIGN_FLAGS=--timestamp=none ARCHS="$architecture" ONLY_ACTIVE_ARCH=NO \
     build
-app="$PWD/DerivedData-Free/Build/Products/Release/AltTab-Free.app"
+app="$PWD/DerivedData-Free/Build/Products/Release/AltTab.app"
 codesign --verify --deep --strict --verbose=2 "$app"
 mkdir -p build
 ditto -c -k --sequesterRsrc --keepParent "$app" "$PWD/build/AltTab-Free-macOS.zip"

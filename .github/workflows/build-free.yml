@@ -6,6 +6,9 @@ on:
     paths:
       - '.github/workflows/build-free.yml'
       - 'scripts/build_free.sh'
+      - 'config/base.xcconfig'
+      - 'resources/icons/app/**'
+      - 'Info.plist'
 permissions:
   contents: read
 jobs:
