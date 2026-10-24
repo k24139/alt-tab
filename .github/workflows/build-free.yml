@@ -1,0 +1,26 @@
+name: Build AltTab Free
+on:
+  workflow_dispatch:
+  push:
+    branches: [free-self-build]
+    paths:
+      - '.github/workflows/build-free.yml'
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build application
+        run: bash scripts/build_free.sh
+      - name: Upload application
+        uses: actions/upload-artifact@v4
+        with:
+          name: AltTab-Free-macOS
+          path: |
+            build/AltTab-Free-macOS.zip
+            build/AltTab-Free-macOS.zip.sha256
+          if-no-files-found: error
+          retention-days: 7
