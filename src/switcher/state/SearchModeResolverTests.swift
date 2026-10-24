@@ -1,13 +1,5 @@
 import XCTest
 
-/// Documents every interaction of the in-switcher Search feature by pinning the decisions of the
-/// `SearchModeResolver` kernel. Pure data in, `Equatable` decision out — no AppKit, no globals.
-/// `TilesView` / `ShortcutAction` execute these decisions; this suite is the spec for what they do.
-///
-/// Groups: A entry · B toggle route · C enter-editing (+Pro gate) · D disable ·
-/// E escape-depends-on-entry · F nav/tab · G shortcut pass-through · H text pass-through
-/// (cmd+A/C/V/X) · I IME/menu early return · J field editability · K printable-key
-/// disambiguation (bare typed key vs hold+key shortcut).
 final class SearchModeResolverTests: XCTestCase {
 
     // MARK: - A. Session entry
@@ -30,20 +22,15 @@ final class SearchModeResolverTests: XCTestCase {
         XCTAssertEqual(SearchModeResolver.toggle(mode: .editing), .disable)
     }
 
-    // MARK: - C. Enter editing (Pro-gated)
 
     func testEnterFromOffEntersEditing() {
-        XCTAssertEqual(SearchModeResolver.enableEditing(mode: .off, canSearch: true), .enterEditing)
+        XCTAssertEqual(SearchModeResolver.enableEditing(mode: .off), .enterEditing)
     }
 
     func testEnterWhenAlreadyEditingJustPlacesCaret() {
-        XCTAssertEqual(SearchModeResolver.enableEditing(mode: .editing, canSearch: true), .placeCaretOnly)
+        XCTAssertEqual(SearchModeResolver.enableEditing(mode: .editing), .placeCaretOnly)
     }
 
-    func testEnterBlockedWhenSearchNotEntitled() {
-        // Gate is checked before the already-editing / state branches.
-        XCTAssertEqual(SearchModeResolver.enableEditing(mode: .off, canSearch: false), .proGateBlocked)
-    }
 
     // MARK: - D. Disable
 
@@ -203,9 +190,6 @@ final class SearchModeResolverTests: XCTestCase {
     }
 
     func testEditingModifierOnlyShortcutTypesBareButTriggersWithHold() {
-        // A modifier-only when-active shortcut like `previousWindow = ⇧`: bare Shift is uppercasing
-        // input and must NOT navigate; ⌥⇧ navigates. These arrive as flagsChanged (no keyDown), so
-        // `ATShortcut.modifiersMatch` feeds them through here with isPrintable: true while editing.
         XCTAssertFalse(SearchModeResolver.editingShortcutMatch(
             eventModifiers: Self.shift, shortcutModifiers: Self.shift, holdModifiers: Self.option,
             isPrintable: true, shortcutHasCommandModifier: false))

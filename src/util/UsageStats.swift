@@ -1,11 +1,3 @@
-/// Usage counters, stored as a list of unix-second timestamps per key.
-///
-/// The timestamps are the storage format, not an implementation detail: `count(_:since:)` and the trial
-/// evidence slice them by a date window, so nothing here may round, bucket or de-duplicate them.
-///
-/// The arrays live in memory and are written back on a debounce: reading the whole array out of `UserDefaults`
-/// (an `as? [Int]` conditional cast, per element) and writing it back on every summon showed up on a 51s
-/// Instruments trace, against an array that grows all year. The cache is owned by `writeQueue`; reads hop onto it.
 struct UsageStats {
     private static let defaults = UserDefaults(suiteName: "\(App.bundleIdentifier).usage")!
     private static let writeQueue = DispatchQueue(label: "UsageStats.writeQueue", qos: .utility)
@@ -24,18 +16,11 @@ struct UsageStats {
     private static var knownHistory = Set<String>()
     private static var flushScheduled = false
     #if DEBUG
-    /// Set by the QA menu's history controls. Replaces the trial history the Pro journey reads.
-    static var qaEvidence: ProJourneyEvidence?
-    /// Set by `QaSurfaces`, so the counts the About window and the Pro prompts quote are the same on every run.
-    /// Read in place of what is stored; recording still goes to the real arrays.
     static var qaPinned: [String: [Int]]?
     #endif
 
     static func recordTrigger(_ shortcutIndex: Int) {
         let timestamp = Int(Date().timeIntervalSince1970)
-        if case .trial = LicenseManager.shared.state, !LicenseManager.shared.isMocked {
-            DispatchQueue.main.async { rememberTrialShortcut(shortcutIndex) }
-        }
         record("triggers", at: timestamp)
         if shortcutIndex > 0 && shortcutIndex < Preferences.maxShortcutCount {
             record("triggersExtraShortcuts", at: timestamp)
@@ -64,11 +49,6 @@ struct UsageStats {
     }
 
     /// Every write is a message to cfprefsd, and most summons repeat the last shortcut.
-    private static func rememberTrialShortcut(_ index: Int) {
-        let key = "proJourney.lastTrialShortcut"
-        guard ProTransitionState.defaults.object(forKey: key) as? Int != index else { return }
-        ProTransitionState.defaults.set(index, forKey: key)
-    }
 
     static func loadPreviousExtraShortcut(_ completion: @escaping (Bool?) -> Void) {
         writeQueue.async {
@@ -160,46 +140,5 @@ struct UsageStats {
             defaults.set(timestamps, forKey: key)
         }
         dirty.removeAll()
-    }
-}
-
-extension UsageStats {
-    static func loadTrialEvidence(_ completion: @escaping (ProJourneyEvidence) -> Void) {
-        guard LicenseManager.shared.state != .proExpired else { completion(ProJourneyEvidence()); return }
-        #if DEBUG
-        if let qaEvidence { completion(qaEvidence); return }
-        if LicenseManager.shared.isMocked {
-            completion(ProJourneyEvidence(searches: qaPinned?["searches"]?.count,
-                extraShortcuts: qaPinned?["triggersExtraShortcuts"]?.count))
-            return
-        }
-        #endif
-        let start = LicenseManager.shared.trialStartDate
-        let end = start?.addingTimeInterval(14 * 86400)
-        let now = LicenseManager.shared.clock.now
-        let style = ProTransitionState.defaults.object(forKey: "proJourney.adoptedStyle") as? Int
-        let auto = ProTransitionState.defaults.object(forKey: "proJourney.usedAuto") as? Bool
-        writeQueue.async {
-            func count(_ key: String) -> Int? {
-                let saved = "proJourney.trialCount.\(key)"
-                if let count = ProTransitionState.defaults.object(forKey: saved) as? Int {
-                    return count
-                }
-                guard !malformed.contains(key) else { return nil }
-                let raw = knownHistory.contains(key) ? cache[key] : defaults.object(forKey: key) as? [Int]
-                let count = ProJourneyEvidence.count(raw, start: start, end: end, now: now)
-                if let end, now >= end, let count {
-                    ProTransitionState.defaults.set(count, forKey: saved)
-                }
-                return count
-            }
-            let evidence = ProJourneyEvidence(
-                searches: count("searches"),
-                extraShortcuts: count("triggersExtraShortcuts"),
-                adoptedStyle: style,
-                usedAuto: auto
-            )
-            DispatchQueue.main.async { completion(evidence) }
-        }
     }
 }

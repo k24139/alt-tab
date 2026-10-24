@@ -5,7 +5,7 @@ import XCTest
 final class SearchDiscoveryTests: XCTestCase {
     private let now = Date(timeIntervalSince1970: 1_800_000_000)
     private var context: SearchDiscoveryPolicy.Context {
-        .init(access: .trial(day: 5), windowCount: 8, hasShortcut: true)
+        .init(windowCount: 8, hasShortcut: true)
     }
 
     func testMascotFillsItsSlotWithoutClippingTheArtwork() throws {
@@ -44,23 +44,7 @@ final class SearchDiscoveryTests: XCTestCase {
         XCTAssertTrue(c.isEligible(history: history))
     }
 
-    func testTrialCalendarReservesExistingPrompts() {
-        for day in -1...15 {
-            var c = context
-            c.access = .trial(day: day)
-            XCTAssertEqual(c.isEligible(history: .init(hasSearched: false)),
-                           [1, 2, 4, 5, 6, 7, 8, 9, 10].contains(day), "day \(day)")
-        }
-    }
 
-    func testPurchaseAndExpirationStopDiscovery() {
-        var c = context
-        XCTAssertTrue(c.isEligible(history: .init(hasSearched: false)))
-        c.access = .pro
-        XCTAssertFalse(c.isEligible(history: .init(hasSearched: false)))
-        c.access = .locked
-        XCTAssertFalse(c.isEligible(history: .init(hasSearched: false)))
-    }
 
     func testUnknownOrUsedSearchNeverOffersHint() {
         XCTAssertFalse(context.isEligible(history: .init()))
@@ -128,7 +112,7 @@ final class SearchDiscoveryTests: XCTestCase {
 
     #if DEBUG
     func testQAPreviewBypassesDiscoveryEligibilityOnlyForItsSession() {
-        let c = SearchDiscoveryPolicy.Context(access: .locked, windowCount: 1, enabled: false,
+        let c = SearchDiscoveryPolicy.Context(windowCount: 1, enabled: false,
                                               optedOut: true, hasShortcut: true)
         let history = SearchDiscoveryPolicy.History(hasSearched: true, exposures: 3, lastExposure: now)
         let preview = SearchDiscoveryPolicy.Opportunity()
@@ -429,7 +413,6 @@ final class SearchDiscoveryTests: XCTestCase {
         var history = SearchDiscoveryPolicy.History(hasSearched: false)
         history.hasUsedExtraShortcut = false
         var context = SearchDiscoveryPolicy.Context(
-            access: .trial(day: 5),
             windowCount: 3,
             hasShortcut: true,
             extraShortcut: true

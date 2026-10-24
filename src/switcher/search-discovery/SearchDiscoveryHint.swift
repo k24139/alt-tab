@@ -59,7 +59,6 @@ final class SearchDiscoveryHint {
         observe(NSWindow.didMoveNotification) { $0.refreshAfterVisibleWork() }
         observe(NSWindow.didResizeNotification) { $0.refreshAfterVisibleWork() }
         observe(NSApplication.didChangeScreenParametersNotification) { $0.cancel() }
-        observe(ProTransitionManager.proLockStateDidChangeNotification) { $0.refreshAfterVisibleWork() }
         for name in [
             NSWorkspace.didActivateApplicationNotification,
             NSWorkspace.activeSpaceDidChangeNotification,
@@ -112,7 +111,7 @@ final class SearchDiscoveryHint {
             offeredExtra = session.searchDiscovery.previewsExtraShortcut ? extraShortcutCandidate() : nil
         }
         #endif
-        let now = LicenseManager.shared.clock.now
+        let now = Date()
         guard session.searchDiscovery.isReady(current: SwitcherSession.current?.searchDiscovery,
                                               now: ProcessInfo.processInfo.systemUptime),
               let shortcut = offeredExtra?.shortcut ?? usableShortcut(), session.searchDiscovery.isEligible(context: context(), history: history),
@@ -138,7 +137,6 @@ final class SearchDiscoveryHint {
         guard recordsHistory else { return }
         history.lastWasExtraShortcut = offeredExtra != nil
         history.recordExposure(at: now)
-        ProTransitionManager.shared.state.recordMessage()
         persistHistory()
     }
 
@@ -210,26 +208,19 @@ final class SearchDiscoveryHint {
     }
 
     private func context() -> SearchDiscoveryPolicy.Context {
-        let license = LicenseManager.shared
-        let access: SearchDiscoveryPolicy.Access
-        switch license.state {
-        case .trial: access = .trial(day: license.daysSinceTrialStart)
-        case .pro: access = .pro
-        case .trialNotStarted, .trialExpired, .proExpired: access = .locked
-        }
-        return SearchDiscoveryPolicy.Context(access: access,
+        return SearchDiscoveryPolicy.Context(
             windowCount: Windows.list.count { $0.shouldShowTheUser && !$0.isWindowlessApp },
-            enabled: CachedUserDefaults.bool("showSearchHint"), optedOut: ProTransitionManager.shared.userOptedOut,
+            enabled: CachedUserDefaults.bool("showSearchHint"), optedOut: false,
             searchActive: TilesView.isSearchModeOn,
-            blockedByOtherUI: isOtherUIBlocking || ProTransitionManager.shared.hasPendingPrompt,
+            blockedByOtherUI: isOtherUIBlocking,
             hasShortcut: offeredExtra != nil || usableShortcut() != nil,
                                              extraShortcut: offeredExtra != nil)
     }
 
     private var isOtherUIBlocking: Bool {
-        ScreenLockEvents.isScreenLocked || ProTransitionManager.shared.state.onboardingInProgress ||
-            ContextMenuEvents.isMenuOpen || ProPromptPopover.isShowing || NSApp.modalWindow != nil
-            || NSApp.windows.contains { $0.isVisible && ($0 is ProPromptWindow || $0 is PermissionsWindow || $0 is SettingsWindow ||
+        ScreenLockEvents.isScreenLocked ||
+            ContextMenuEvents.isMenuOpen || NSApp.modalWindow != nil
+            || NSApp.windows.contains { $0.isVisible && ($0 is PermissionsWindow || $0 is SettingsWindow ||
                         $0 is FeedbackWindow) }
     }
 

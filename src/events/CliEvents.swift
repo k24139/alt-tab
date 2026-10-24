@@ -105,7 +105,6 @@ class CliServer {
         if rawValue == "--qa-state" {
             return qaState()
         }
-        if let reply = QaLifecycle.command(rawValue) { return reply }
         if rawValue.hasPrefix("--qa-defer-repaints=") {
             let ms = Int(rawValue.dropFirst("--qa-defer-repaints=".count)) ?? 0
             App.deferRepaintsForQa(min(5000, max(0, ms)))
@@ -134,9 +133,6 @@ class CliServer {
             return noOutput
         }
         // The visual non-regression test opening each window, sheet, popover, alert and menu in turn.
-        if let reply = QaSurfaces.command(rawValue) {
-            return reply
-        }
         // The provider timeline, drained rather than read: each record is reported exactly once, so a test
         // gets the events of its own session and not the whole run's backlog. The harness writes them out as
         // NDJSON (`TrackingTelemetryNdjson`).
