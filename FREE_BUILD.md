@@ -2,7 +2,7 @@
 
 This modified GPL-3.0 fork of Louis Pontoise's AltTab makes all local features available without a license. It has no trial, activation flow, purchase interface, update checks, update notifications, or automatic installation of updates. Upstream author credits and the license remain in the repository and About window.
 
-The app is named `AltTab-Free` and uses the stable bundle identifier `com.k24139.alt-tab-free`. It has separate settings and macOS permission records. It does not read or change the official app's license, Keychain entries, or preferences. To bring existing settings over, export them from the official app and import them through this fork's General settings. Values that the official app already downgraded are not recoverable from a normal settings export. Select those values again in this app.
+The app is named `AltTab` and uses the stable bundle identifier `com.k24139.alt-tab-free`. It has separate settings and macOS permission records. It does not read or change the official app's license, Keychain entries, or preferences. To bring existing settings over, export them from the official app and import them through this fork's General settings. Values that the official app already downgraded are not recoverable from a normal settings export. Select those values again in this app.
 
 ## Manual build
 
@@ -20,7 +20,7 @@ bash scripts/build_free.sh
 
 The script checks the free-build rules and generated artwork, builds the Release target for your Mac's architecture, signs it for local use, verifies the signature, and creates:
 
-- `DerivedData-Free/Build/Products/Release/AltTab-Free.app`
+- `DerivedData-Free/Build/Products/Release/AltTab.app`
 - `build/AltTab-Free-macOS.zip`
 - `build/AltTab-Free-macOS.zip.sha256`
 
@@ -70,3 +70,5 @@ See `VERIFICATION.md` for the checks completed before the manual build.
 ## Build on GitHub
 
 Open Actions, select **Build AltTab Free**, choose **Run workflow** on `master`, and run it. After success, download **AltTab-Free-macOS** under Artifacts. Extract the artifact, then the application ZIP inside it. Artifacts expire after seven days. No Xcode installation on your Mac is needed.
+
+The Finder icon restores the classic upstream stacked-window artwork from before commit `18a14fb5`. The original ICNS supplies the Finder icon, and the matching PNG supplies the in-app icon. The displayed app name is AltTab. The separate fork bundle identifier remains stable.

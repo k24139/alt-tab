@@ -75,7 +75,7 @@ def verify():
     assert 'Sparkle' not in project, 'Updater is still an Xcode dependency'
     config = (ROOT / 'config/base.xcconfig').read_text()
     assert 'PRODUCT_BUNDLE_IDENTIFIER = com.k24139.alt-tab-free' in config
-    assert 'PRODUCT_NAME = AltTab-Free' in config
+    assert 'PRODUCT_NAME = AltTab' in config
     preferences = (ROOT / 'src/preferences/Preferences.swift').read_text()
     assert 'ProGatedPreferences' not in preferences
     for name in ['appearanceStyle', 'appearanceSize', 'shortcutStyle']:
