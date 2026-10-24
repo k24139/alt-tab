@@ -260,16 +260,11 @@ final class MascotMessageView: NSStackView {
         spacing = 10
     }
 
-    func update(title: String, message: String, proGradient: Bool = false) {
+    func update(title: String, message: String) {
         heading.stringValue = title
         detail.stringValue = message
         detail.setAccessibilityLabel(message)
-        guard proGradient, let range = message.range(of: ProBadgeView.proLabel) else { return }
-        let text = NSMutableAttributedString(string: message,
-            attributes: [.font: detail.font!, .foregroundColor: detail.textColor!])
-        text.replaceCharacters(in: NSRange(range, in: message),
-            with: ProGradient.makeProTextAttachment(font: detail.font!))
-        detail.attributedStringValue = text
+
     }
 
     @available(*, unavailable)

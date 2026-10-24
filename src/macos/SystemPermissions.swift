@@ -16,9 +16,6 @@ class SystemPermissions {
     private static var checkIsPending = false
 
     static func ensurePermissionsAreGranted() {
-        #if DEBUG
-        if QaLifecycle.enabled { checkPermissionsSoon(); return }
-        #endif
         notify_register_dispatch("com.apple.tcc.access.changed", &notifyToken, BackgroundWork.permissionsCheckQueue.strongUnderlyingQueue) { _ in
             checkPermissionsSoon()
         }
@@ -109,9 +106,6 @@ class SystemPermissions {
         BackgroundWork.permissionsCheckQueue.addOperation {
             let neverAsked = hasNoEntry(service) ?? true
             DispatchQueue.main.async {
-                #if DEBUG
-                if QaLifecycle.enabled { QaLifecycle.recordPermissionRequest(service, prompt: neverAsked); return }
-                #endif
                 if neverAsked {
                     prompt()
                 } else {
@@ -124,9 +118,6 @@ class SystemPermissions {
     /// Whether the app has no entry in `service`'s list, or nil if TCC can't say. `TCCAccessPreflight` answers 2 while
     /// there is no entry, and 0 once there is, switched on or off (measured on macOS 27).
     static func hasNoEntry(_ service: String) -> Bool? {
-        #if DEBUG
-        if QaLifecycle.enabled { return QaLifecycle.permission(service == "kTCCServiceAccessibility" ? 2 : 3) }
-        #endif
         return tccAccessPreflight.map { $0(service as CFString, nil) == 2 }
     }
 
@@ -158,9 +149,6 @@ class AccessibilityPermission {
     // `TCCAccessCheckAuditToken` asks tccd each time (~10ms) and is already correct when `com.apple.tcc.access.changed`
     // arrives. It's exported since at least macOS 10.11; we fall back to `AXIsProcessTrusted` if it's ever gone.
     private static func detect() -> PermissionStatus {
-        #if DEBUG
-        if QaLifecycle.enabled { return QaLifecycle.permission(0) ? .granted : .notGranted }
-        #endif
         if let tccAccessCheckAuditToken {
             return tccAccessCheckAuditToken("kTCCServiceAccessibility" as CFString, ownAuditToken, nil) ? .granted : .notGranted
         }
@@ -209,9 +197,6 @@ class ScreenRecordingPermission {
     // no other app has a titled window.
     private static func detect() -> PermissionStatus? {
         #if DEBUG
-        if QaLifecycle.enabled {
-            return QaLifecycle.permission(1) ? .granted : (Preferences.screenRecordingPermissionSkipped ? .skipped : .notGranted)
-        }
         #endif
         if otherAppsWindowTitlesAreVisible() {
             return .granted
@@ -223,8 +208,6 @@ class ScreenRecordingPermission {
         guard !Preferences.screenRecordingPermissionSkipped else {
             return CGPreflightScreenCaptureAccess() ? .granted : .skipped
         }
-        // No entry means not granted. Asking anyway shows the macOS prompt, which puts AltTab back in the list the moment
-        // the user removes it. Prompting is the Grant button's job
         if SystemPermissions.hasNoEntry("kTCCServiceScreenCapture") == true {
             return .notGranted
         }

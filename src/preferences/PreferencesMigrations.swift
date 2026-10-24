@@ -1,8 +1,6 @@
 import Cocoa
 
 class PreferencesMigrations {
-    /// Injectable so tests can run migrations against an isolated `UserDefaults` suite.
-    /// Production keeps `.standard`; behavior is unchanged.
     static var defaults = UserDefaults.standard
 
     static func removeCorruptedPreferences() {
@@ -17,7 +15,6 @@ class PreferencesMigrations {
     static func migratePreferences() {
         let preferencesKey = "preferencesVersion"
         let existingVersion = Self.defaults.string(forKey: preferencesKey)
-        ProTransitionState.markFreshInstallIfUnknown(existingVersion == nil)
         if let versionInPlist = existingVersion {
             if versionInPlist != "#VERSION#" && versionInPlist.compare(App.version, options: .numeric) != .orderedDescending {
                 updateToNewPreferences(versionInPlist)
