@@ -1,0 +1,51 @@
+name: Publish AltTab Free release
+on:
+  workflow_dispatch:
+  push:
+    branches: [free-self-build]
+    paths: ['.github/workflows/publish-free.yml']
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: AltTab-Free-macOS
+          run-id: 40115322580
+          github-token: ${{ github.token }}
+          path: release-assets
+      - name: Verify app and checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd release-assets
+          expected=$(awk '{print $1}' AltTab-Free-macOS.zip.sha256)
+          actual=$(shasum -a 256 AltTab-Free-macOS.zip | awk '{print $1}')
+          test "$expected" = "$actual"
+          printf '%s  AltTab-Free-macOS.zip\n' "$actual" > AltTab-Free-macOS.zip.sha256
+          ditto -x -k AltTab-Free-macOS.zip "$RUNNER_TEMP/verified-app"
+          codesign --verify --deep --strict --verbose=2 "$RUNNER_TEMP/verified-app/AltTab-Free.app"
+      - name: Publish release on fork
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: k24139/alt-tab
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/release-notes.md" <<'NOTES'
+          All local AltTab features are free. Licensing, trial restrictions, purchase screens, and update checks and prompts have been removed.
+
+          **Platform:** Apple Silicon Macs, macOS 12 or later. Intel support is not included in this build.
+
+          Download `AltTab-Free-macOS.zip`, extract it, and move `AltTab-Free.app` to Applications. Quit official AltTab to avoid shortcut conflicts. Grant Accessibility and Screen Recording permissions when requested.
+
+          The app is signed ad hoc for local use and is not Apple-notarized. The Release build and signature verification passed on GitHub Actions. Live macOS integration testing and the full XCTest suite remain pending.
+
+          Built from commit `449e412ed69e7b51cbfca94125feb71e70704719` in https://github.com/k24139/alt-tab/actions/runs/40115322580. Corresponding source is included through GitHub's source archives. GPL-3.0 licensing and upstream attribution remain intact.
+          NOTES
+          gh release create v11.10.1-free.1 --target 449e412ed69e7b51cbfca94125feb71e70704719 --title 'AltTab Free 11.10.1' --notes-file "$RUNNER_TEMP/release-notes.md" --draft
+          gh release upload v11.10.1-free.1 release-assets/AltTab-Free-macOS.zip release-assets/AltTab-Free-macOS.zip.sha256
+          gh release edit v11.10.1-free.1 --draft=false --latest
