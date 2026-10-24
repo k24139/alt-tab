@@ -26,3 +26,7 @@ The build script creates a local signed app, ZIP, and checksum after Xcode is av
 ## GitHub application build completed
 
 The Apple Silicon Release application built successfully on GitHub macOS 26.6.2 with Xcode 26.6. `codesign --verify --deep --strict` reports the app valid on disk and satisfying its designated requirement. The ZIP and SHA-256 checksum uploaded successfully. Run: https://github.com/k24139/alt-tab/actions/runs/40115322580 . This supersedes the earlier local build limitation. Live app integration tests and the full XCTest suite remain pending.
+
+## Classic icon and application name
+
+Run https://github.com/k24139/alt-tab/actions/runs/40116220982 successfully built and signature-verified `AltTab.app` from commit `87b18a80b7b6f7331d8ea769a54d776b93391680`. The classic upstream PNG and ICNS were restored from the parent of upstream icon-change commit `18a14fb5`. The release workflow verifies both bundled icon hashes and the app name and icon metadata before publishing.
