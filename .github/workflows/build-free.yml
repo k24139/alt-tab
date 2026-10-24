@@ -5,6 +5,7 @@ on:
     branches: [free-self-build]
     paths:
       - '.github/workflows/build-free.yml'
+      - 'scripts/build_free.sh'
 permissions:
   contents: read
 jobs:
