@@ -53,7 +53,7 @@ bash ai/test.sh
 bash ai/build.sh
 ```
 
-Debug and Release use ad hoc signing by default. A developer can override it in the ignored `config/local.xcconfig`. The manual free-build command pins the fork identity and signing settings even if that file exists.
+Debug and Release use ad hoc signing by default. A developer can override it in the ignored `config/local.xcconfig`. The fork identity comes from `config/base.xcconfig`. Keep that identity unchanged in local overrides.
 
 Before treating the app as verified, test the actual Release bundle: first launch, search and locked search, extra shortcuts, all three appearance styles, automatic sizing, search on shortcut release, settings persistence, login launch, window actions, Spaces, fullscreen, and multiple displays. Repeat offline and after relaunch. No date or trial state is read to grant access. There is no updater linked to the app.
 
@@ -66,3 +66,7 @@ Removed the licensing implementation, machine fingerprinting, license Keychain o
 The fork's workflow checks source rules and artwork only. Builds and releases are manual. It never publishes an upstream appcast or invokes the upstream release pipeline.
 
 See `VERIFICATION.md` for the checks completed before the manual build.
+
+## Build on GitHub
+
+Open Actions, select **Build AltTab Free**, choose **Run workflow** on `master`, and run it. After success, download **AltTab-Free-macOS** under Artifacts. Extract the artifact, then the application ZIP inside it. Artifacts expire after seven days. No Xcode installation on your Mac is needed.

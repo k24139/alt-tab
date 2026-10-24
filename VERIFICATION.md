@@ -22,3 +22,7 @@ Host: Apple Silicon macOS, Apple Swift 6.3.3, Command Line Tools selected.
 No `.app` has been built or launched. Source type checking and executable logic checks do not establish macOS integration behavior. Verify the Release app's permissions, window previews, search, extra shortcuts, appearance styles, auto sizing, search-on-release, persistence, login launch, Spaces, fullscreen, and multiple displays after building. Intel and universal execution remain untested.
 
 The build script creates a local signed app, ZIP, and checksum after Xcode is available. It does not notarize or publish the app. The application has no update implementation, update menu, update settings, background update timer, feedback update prompt, or linked Sparkle dependency.
+
+## GitHub application build completed
+
+The Apple Silicon Release application built successfully on GitHub macOS 26.6.2 with Xcode 26.6. `codesign --verify --deep --strict` reports the app valid on disk and satisfying its designated requirement. The ZIP and SHA-256 checksum uploaded successfully. Run: https://github.com/k24139/alt-tab/actions/runs/40115322580 . This supersedes the earlier local build limitation. Live app integration tests and the full XCTest suite remain pending.
